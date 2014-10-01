@@ -6,15 +6,24 @@ class UsersController < ApplicationController
 
   # GET /users/1
   def show
-    # make sure the user is authenticated
-    # make sure that the authenticated user is this user
-    # binding.pry
-    if session[:user_id]
-      @user = User.find(params[:id])
-      render(:show)
+    # who is the user being accessed?
+    load_user
+
+    # who is trying to access this? are they a user?
+    # if they are a user, who is the user who is trying to acces this?
+    # is the user who is trying to access this the SAME as the user being accessed?
+    
+    if !logged_in?
+      redirect_to login_path
+    elsif current_user != @user && current_user.role != "patissiere"
+      redirect_to user_path(current_user)
     else
-      redirect_to(login_path)
+      render(:show)
     end
+
+    
+
+    
   end
 
   # GET /users/new
@@ -56,5 +65,9 @@ class UsersController < ApplicationController
     # Never trust parameters from the scary internet, only allow the white list through.
     def user_params
       params[:user]
+    end
+
+    def load_user
+      @user = User.find(params[:id])
     end
 end
