@@ -1,4 +1,7 @@
 class UsersController < ApplicationController
+  before_action :load_user, only: [:show, :edit, :update, :destroy]
+  before_action :authenticate, :authorize
+
   # GET /users
   def index
     @users = User.all
@@ -6,24 +9,21 @@ class UsersController < ApplicationController
 
   # GET /users/1
   def show
-    # who is the user being accessed?
-    load_user
 
     # who is trying to access this? are they a user?
     # if they are a user, who is the user who is trying to acces this?
     # is the user who is trying to access this the SAME as the user being accessed?
     
-    if !logged_in?
-      redirect_to login_path
-    elsif current_user != @user && current_user.role != "patissiere"
-      redirect_to user_path(current_user)
-    else
-      render(:show)
-    end
-
-    
-
-    
+    # who is the user being accessed?
+    # if !load_user
+    #   redirect_to root_path
+    # elsif !logged_in?
+    #   redirect_to login_path
+    # elsif current_user != @user && current_user.role != "patissiere"
+    #   redirect_to user_path(current_user)
+    # else
+    #   render(:show)
+    # end
   end
 
   # GET /users/new
@@ -69,5 +69,16 @@ class UsersController < ApplicationController
 
     def load_user
       @user = User.find(params[:id])
+      redirect_to root_path if !@user
+    end
+
+    def authenticate
+      redirect_to login_path if !logged_in?
+    end
+
+    def authorize
+      if current_user != @user && current_user.role != "patissiere"
+        redirect_to user_path(current_user) 
+      end
     end
 end
