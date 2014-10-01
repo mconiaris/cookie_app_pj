@@ -6,7 +6,15 @@ class UsersController < ApplicationController
 
   # GET /users/1
   def show
-    @user = User.find(params[:id])
+    # make sure the user is authenticated
+    # make sure that the authenticated user is this user
+    # binding.pry
+    if session[:user_id]
+      @user = User.find(params[:id])
+      render(:show)
+    else
+      redirect_to(login_path)
+    end
   end
 
   # GET /users/new
