@@ -9,7 +9,7 @@
 User.destroy_all
 Recipe.destroy_all
 
-User.create(name: "Phil", email: "philco@ga.co", role: "patissier", password: "beth")
+User.create(name: "Phil", email: "philco@ga.co", role: "patissiere", password: "beth")
 pj = User.create(name: "PJ", email: "pj@ga.co", role: "baker", password: "christie")
 User.create(name: "Travis", email: "trav@ga.co", role: "baker", password: "malsy")
 User.create(name: "Olivia", email: "olivia@ga.co", role: "customer", password: "phil")
