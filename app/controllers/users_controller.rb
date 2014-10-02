@@ -1,6 +1,40 @@
 class UsersController < ApplicationController
+
+  # 1. the first thing we do is ensure that the browser that made
+  #   the request is authenticated as someone in our database
+  # 2. we do this by checking an authenticate method defined for
+  #   every controller in ApplicationController
+  # 3. because we are putting all user actions except sign up
+  #   and new user creation (you can't be authenticated if
+  #   you're not) on the site yet, we'll authenticate all except
+  #   those...
+  #
+  before_action :authenticate, except: [:new, :create]
+
+  # 1. the next thing we do is load the current resource, which in
+  #   this case is user -- thus, "load_user"...
+  # 2. the load_user method is in this class because it references
+  #   the current resource -- it won't be a universal need for
+  #   authentication and authorization!
+  # 3. we need to load the user on the "member routes", ie
+  #   routes with an "/:id", which are (from rake routes)
+  #   edit, show, update and destroy...
+  #
   before_action :load_user, only: [:show, :edit, :update, :destroy]
-  before_action :authenticate, :authorize
+
+  # 1. finally, we ensure that the authenticated user has the right
+  #   to access the loaded resource
+  # 2. this is VERY dependent on the logic of our routes and
+  #   resources, and so is defined within this controller!
+  # 3. anyone has the right to access the new and create routes,
+  #   and only admins (in cookie CRUD world, patissieres) can
+  #   access the index page (all users), otherwise (edit, show,
+  #   update and destroy) if the authenticated user IS the same as
+  #   the loaded resource user they can see the page AND admins
+  #   can see the page too...
+  #
+  before_action :authorize_admin_only, only: :index
+  before_action :authorize_user_access, only: [:show, :edit, :update, :destroy]
 
   # GET /users
   def index
@@ -9,21 +43,6 @@ class UsersController < ApplicationController
 
   # GET /users/1
   def show
-
-    # who is trying to access this? are they a user?
-    # if they are a user, who is the user who is trying to acces this?
-    # is the user who is trying to access this the SAME as the user being accessed?
-    
-    # who is the user being accessed?
-    # if !load_user
-    #   redirect_to root_path
-    # elsif !logged_in?
-    #   redirect_to login_path
-    # elsif current_user != @user && current_user.role != "patissiere"
-    #   redirect_to user_path(current_user)
-    # else
-    #   render(:show)
-    # end
   end
 
   # GET /users/new
@@ -67,18 +86,25 @@ class UsersController < ApplicationController
       params[:user]
     end
 
+    # puts the correct user into the @user instance variable whenever called, and
+    #  also handles the situation where we have referenced a user resource that
+    #  is not in the database!
     def load_user
-      @user = User.find(params[:id])
-      redirect_to root_path if !@user
+      @user = User.find_by(id: params[:id]) # needs to be find_by to avoid the error!
+      redirect_to root_path if !@user # probably should add a message to this...
     end
 
-    def authenticate
-      redirect_to login_path if !logged_in?
+    def authorize_admin_only
+      unless current_user.is_admin? # this is defined on the model!
+        redirect_to user_path(current_user)
+      end
     end
 
-    def authorize
-      if current_user != @user && current_user.role != "patissiere"
-        redirect_to user_path(current_user) 
+    def authorize_user_access
+      # reversed the login on this a little bit, unless meaning NOT :)
+      #   i think it reads easier, tho
+      unless current_user == @user || current_user.is_admin?
+        redirect_to user_path(current_user)
       end
     end
 end

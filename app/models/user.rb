@@ -4,4 +4,10 @@ class User < ActiveRecord::Base
   validates :email, uniqueness: true
 
   has_secure_password
+
+  # here is a helper to check if a user is an admin!
+  #
+  def is_admin?
+    self.role =~ /patissier/
+  end
 end
